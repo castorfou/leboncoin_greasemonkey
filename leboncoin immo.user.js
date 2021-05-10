@@ -1,37 +1,28 @@
 // ==UserScript==
 // @name         leboncoin immo
 // @namespace    leboncoin
-// @version      0.1
+// @version      0.3
 // @description  Garde le prix des annonces immo, voir ce que j'ai déjà vu, les évolutions de prix, l'age de l'annonce,...
 // @author       Guillaume Ramelet
 // @match        https://www.leboncoin.fr/*
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @require      http://code.jquery.com/jquery-3.4.1.min.js
 // ==/UserScript==
+/* globals jQuery, $, waitForKeyElements */
 
-(function() {
 
+$(document).ready(function() {
 
-    function getLink(linkName) {
-        const metas = document.getElementsByTagName('link');
-        for (let i = 0; i < metas.length; i++) {
-            if (metas[i].getAttribute('name') === linkName) {
-                return metas[i].getAttribute('content');
-            }
-        }
-        return '';
-    }
     function getMeta(metaName) {
         const metas = document.getElementsByTagName('meta');
-
         for (let i = 0; i < metas.length; i++) {
             if (metas[i].getAttribute('property') === metaName) {
                 return metas[i].getAttribute('content');
             }
         }
-
-        return '';
+       return '';
     }
 
     function _isContains(json, value) {
@@ -44,30 +35,82 @@
         return contains;
     }
 
-    function conserve_annonce(id_annonce, auj, prix_annonce) {
+    function conserve_annonce(id_annonce, auj, prix_annonce, ecrase = false) {
         var annonce_existante = GM_getValue(id_annonce)
         var fiche_annonce
+        console.debug('function conserve_annonce '+id_annonce+' '+auj+' '+prix_annonce+' '+ecrase)
         if (annonce_existante == undefined) {
-            //console.log('nouvelle annonce '+id_annonce)
-            fiche_annonce = JSON.parse('{"prix":[{}] }')
+            console.debug('nouvelle annonce '+id_annonce)
+            fiche_annonce = JSON.parse('{"prix":[] }')
         } else {
-            //console.log('annonce existante '+id_annonce)
+            console.debug('annonce existante '+id_annonce)
             fiche_annonce = JSON.parse(annonce_existante)
 
-            //pour reinitialiser les valeurs au lancement
-            //à commenter quand c'est bien initialisé
-            //fiche_annonce = JSON.parse('{"prix":[{}] }')
+            //decommenter pour reinitialiser les valeurs au lancement (et commenter la ligne du haut qui risque de planter si contenu ,non-json)
+            //à recommenter après l'initialisation
+            //fiche_annonce = JSON.parse('{"prix":[] }')
         }
         if (! _isContains(fiche_annonce,auj)) {
+            console.debug('La fiche '+id_annonce+' ne contient pas '+auj)
+            fiche_annonce.prix.push({ date: auj, prix: prix_annonce });
+        } else { if (ecrase) {
+            console.debug('ecraser la fiche '+id_annonce);
+            $(fiche_annonce.prix).each(function (index){
+                console.debug('index fiche_annonce '+index)
+                if(fiche_annonce.prix[index].date == auj){
+                    fiche_annonce.prix.splice(index,1); // This will remove the object that first name equals to Test1
+                    return false; // This will stop the execution of jQuery each loop.
+                }
+            });
+
             fiche_annonce.prix.push({ date: auj, prix: prix_annonce });
         }
-        //console.log('contenu fiche '+JSON.stringify(fiche_annonce, null, 2))
+        }
+        //affiche_donnees_annonce(id_annonce)
         GM_setValue(id_annonce, JSON.stringify(fiche_annonce, null, 2));
+    }
+
+    function supprime_annonce(id_annonce) {
+        GM_setValue(id_annonce,JSON.stringify(JSON.parse('{"prix":[] }'), null, 2))
+    }
+
+    function affiche_donnees_annonce(id_annonce) {
+        var annonce_existante = GM_getValue(id_annonce)
+        annonce_existante = JSON.parse(annonce_existante)
+        var prix_max = getMax(annonce_existante.prix, 'prix')
+        var prix_min = getMin(annonce_existante.prix, 'prix')
+        console.log('contenu fiche '+JSON.stringify(annonce_existante, null, 2))
+        console.log('prix max', prix_max,' - ','prix min',prix_min)
+    }
+
+    function getMax(arr, prop) {
+        console.debug('getMax',arr, prop)
+        var max=null;
+        for (var i=0 ; i<arr.length ; i++) {
+            if (max == null || parseInt(arr[i][prop]) > parseInt(max[prop])) {
+                max = arr[i];
+                console.debug('max',max[prop])
+            }
+        }
+        return max[prop];
+    }
+    function getMin(arr, prop) {
+        var min=null;
+        for (var i=0 ; i<arr.length ; i++) {
+            if (min == null || parseInt(arr[i][prop]) < parseInt(min[prop])) {
+                min = arr[i];
+            }
+        }
+        return min[prop];
     }
 
 
 
+
     'use strict';
+    //test jquery
+    //alert("There are " + $('a').length + " links on this page.");
+
 
 
     console.log("leboncoin immo loading...");
@@ -82,7 +125,9 @@
     var aujourdhui = today.toISOString().split('T')[0];
     var id_annonce = ''
 
-    console.log(page[3])
+    console.debug('Nous sommes sur la page '+page[3])
+    //supprime_annonce(1978905111)
+    conserve_annonce(1978905111, '2021-05-09', '759901', true)
 
     if (page[3] == 'ventes_immobilieres') {
         console.log('annonce individuelle...')
@@ -92,11 +137,8 @@
         var og_url = getMeta('og:url');
         id_annonce = og_url.split('/')[4].split('.')[0];
         console.log('annonce id '+id_annonce);
-        console.log(aujourdhui);
-
-        var contenu_cache = GM_getValue(id_annonce)
-        console.log('contenu cache '+contenu_cache)
-
+        //console.log(aujourdhui);
+        affiche_donnees_annonce(id_annonce)
     }
 
     if (page[3].startsWith('recherche?category=9')) {
@@ -118,4 +160,4 @@
     }
     console.log("leboncoin immo stopping...");
 
-})();
+});
