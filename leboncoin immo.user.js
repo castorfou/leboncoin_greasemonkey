@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name         leboncoin immo
 // @namespace    leboncoin
-// @version      0.3
+// @version      0.4
 // @description  Garde le prix des annonces immo, voir ce que j'ai déjà vu, les évolutions de prix, l'age de l'annonce,...
 // @author       Guillaume Ramelet
 // @match        https://www.leboncoin.fr/*
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require      http://code.jquery.com/jquery-3.4.1.min.js
+// @grant        GM_addStyle
+// @require      http://code.jquery.com/jquery-3.6.0.min.js
 // ==/UserScript==
 /* globals jQuery, $, waitForKeyElements */
 
@@ -81,7 +82,39 @@ $(document).ready(function() {
         var prix_min = getMin(annonce_existante.prix, 'prix')
         console.log('contenu fiche '+JSON.stringify(annonce_existante, null, 2))
         console.log('prix max', prix_max,' - ','prix min',prix_min)
+        affiche_prix_min_max(prix_min, prix_max)
     }
+
+    function affiche_prix_min_max(prix_min, prix_max) {
+        //https://stackoverflow.com/questions/12354989/how-can-i-display-the-output-of-my-userscript-in-a-floating-box-on-the-side-of-t
+        console.debug('affiche_prix_min_max debut', prix_min, prix_max)
+        var box = document.createElement( 'div' );
+        box.id = 'myAlertePrix';
+        GM_addStyle(
+            ' #myAlertePrix {           ' +
+            '    opacity: 0.9;          ' +
+            '    background: white;     ' +
+            '    border: 1px solid red; ' +
+            '    padding: 4px;          ' +
+            '    position: relative;    ' +
+            '    max-width: 400px;      ' +
+            ' } '
+        );
+        $( "body").append( box );
+        console.debug( $( "#myAlertePrix" ) )
+
+        box.textContent = "Prix mini "+prix_min+"\nPrix maxi "+prix_max;
+
+        $( "#myAlertePrix" ).insertBefore( $( ".styles_Gallery__Y7BAy" ) )
+        //$( ".myAlertePrix" ).appendTo("._1cnjm")
+        //$( "._1cnjm" ).first().append(box)
+        console.debug( $( "#grid" ) )
+        box.addEventListener( 'click', function () {
+            box.parentNode.removeChild( box );
+        }, true );
+        console.debug('affiche_prix_min_max fin')
+    }
+
 
     function getMax(arr, prop) {
         console.debug('getMax',arr, prop)
