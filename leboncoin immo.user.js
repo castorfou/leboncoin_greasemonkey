@@ -80,12 +80,14 @@ $(document).ready(function() {
         annonce_existante = JSON.parse(annonce_existante)
         var prix_max = getMax(annonce_existante.prix, 'prix')
         var prix_min = getMin(annonce_existante.prix, 'prix')
+        var premiere_visite = getPremiereVisite(id_annonce)
         console.log('contenu fiche '+JSON.stringify(annonce_existante, null, 2))
         console.log('prix max', prix_max,' - ','prix min',prix_min)
-        affiche_prix_min_max(prix_min, prix_max)
+        affiche_prix_min_max_premiere_visite(prix_min, prix_max, premiere_visite)
     }
 
-    function affiche_prix_min_max(prix_min, prix_max) {
+    function affiche_prix_min_max_premiere_visite(prix_min, prix_max, premiere_visite) {
+        //premiere_visite date_aujourd'hui - date 1ere visite
         //https://stackoverflow.com/questions/12354989/how-can-i-display-the-output-of-my-userscript-in-a-floating-box-on-the-side-of-t
         console.debug('affiche_prix_min_max debut', prix_min, prix_max)
         var box = document.createElement( 'div' );
@@ -103,7 +105,7 @@ $(document).ready(function() {
         $( "body").append( box );
         console.debug( $( "#myAlertePrix" ) )
 
-        box.textContent = "Prix mini "+prix_min+"\nPrix maxi "+prix_max;
+        box.innerHTML = "Prix mini "+prix_min+"<br>Prix maxi "+prix_max+"<br>Derniere visite "+premiere_visite+" jours";
 
         $( "#myAlertePrix" ).insertBefore( $( ".styles_Gallery__Y7BAy" ) )
         //$( ".myAlertePrix" ).appendTo("._1cnjm")
@@ -115,6 +117,59 @@ $(document).ready(function() {
         console.debug('affiche_prix_min_max fin')
     }
 
+    function getPremiereVisite(id_annonce) {
+        console.debug('getPremiereVisite debut', id_annonce)
+        var annonce_existante = GM_getValue(id_annonce)
+        annonce_existante = JSON.parse(annonce_existante)
+        var oldestdate = getOldestDate(annonce_existante.prix, 'date')
+        console.debug(oldestdate)
+        var date_auj = new Date(aujourdhui)
+        var date_oldest = new Date(oldestdate)
+        var nombreJours = (date_auj.getTime()-date_oldest.getTime()) / (1000 * 3600 * 24)
+
+        console.debug('getPremiereVisite fin')
+        return nombreJours
+
+    }
+
+    function affiche_age_annonce(dom_entry, id_annonce) {
+        console.debug('affiche_age_annonce debut', dom_entry, id_annonce)
+        var box = document.createElement( 'div' );
+        box.id = 'age'+id_annonce;
+        box.className = 'myAlerteAge';
+        GM_addStyle(
+            ' .myAlerteAge {            ' +
+            '    opacity: 0.9;          ' +
+            '    background: white;     ' +
+            '    border: 1px solid red; ' +
+            '    padding: 4px;          ' +
+            '    position: relative;    ' +
+            '    z-index: 15000;        ' +
+            '    float: left;           ' +
+            '    left: 25px;            ' +
+            '    top: 6px;              ' +
+            ' } '
+        );
+        $( dom_entry).prepend( box );
+
+        box.textContent = getPremiereVisite(id_annonce);
+
+        console.debug('affiche_age_annonce fin')
+
+    }
+
+
+    function getOldestDate(arr, prop) {
+        console.debug('getOldestDate',arr, prop)
+        var oldest=null;
+        for (var i=0 ; i<arr.length ; i++) {
+            if (oldest == null || Date.parse(arr[i][prop]) < Date.parse(oldest[prop])) {
+                oldest = arr[i];
+            }
+        }
+        console.debug('oldest',oldest[prop])
+        return oldest[prop];
+    }
 
     function getMax(arr, prop) {
         console.debug('getMax',arr, prop)
@@ -122,12 +177,13 @@ $(document).ready(function() {
         for (var i=0 ; i<arr.length ; i++) {
             if (max == null || parseInt(arr[i][prop]) > parseInt(max[prop])) {
                 max = arr[i];
-                console.debug('max',max[prop])
             }
         }
+        console.debug('max',max[prop])
         return max[prop];
     }
     function getMin(arr, prop) {
+        console.debug('getMin',arr, prop)
         var min=null;
         for (var i=0 ; i<arr.length ; i++) {
             if (min == null || parseInt(arr[i][prop]) < parseInt(min[prop])) {
@@ -160,7 +216,7 @@ $(document).ready(function() {
 
     console.debug('Nous sommes sur la page '+page[3])
     //supprime_annonce(1978905111)
-    conserve_annonce(1978905111, '2021-05-09', '759901', true)
+    //conserve_annonce(1980789349, '2020-05-09', '650000', true)
 
     if (page[3] == 'ventes_immobilieres') {
         console.log('annonce individuelle...')
@@ -177,16 +233,20 @@ $(document).ready(function() {
     if (page[3].startsWith('recherche?category=9')) {
         console.log('liste des annonces...')
         var liste_annonces = document.getElementsByClassName("styles_adCard__2YFTi styles_classified__aKs-b");
-        //console.log(liste_annonces[0]).singleNodeValue
         //http://xpather.com/  AdCard__AdCardLink-sc-1h74x40-0 cHZrAn
         for (i=0; i<liste_annonces.length; i++) {
             var id_annonce_lien = document.evaluate('. //a[@class="AdCard__AdCardLink-sc-1h74x40-0 cHZrAn"]/@href', liste_annonces[i], null, XPathResult.STRING_TYPE, null).stringValue;
             id_annonce = id_annonce_lien.split('/')[2].split('.')[0]
-            //console.log('ID annonce: '+id_annonce)
-            var prix_annonce_complet = document.evaluate('. //span[@class="AdCardPrice__Amount-bz31y2-1 dflscE"]', liste_annonces[i], null, XPathResult.STRING_TYPE, null).stringValue;
+            console.debug('ID annonce: '+id_annonce)
+            var prix_annonce_complet = document.evaluate('. //div[@class="AdCardPrice__Wrapper-bz31y2-0 foZmYw"]', liste_annonces[i], null, XPathResult.STRING_TYPE, null).stringValue;
             prix_annonce = prix_annonce_complet.replace(/(\s*)(€*)/g, '');
-            //console.log(prix_annonce)
-            conserve_annonce(id_annonce, aujourdhui, prix_annonce);
+            if ( prix_annonce === '') {
+                console.log('Pb dans la recup du prix pour l\'annonce',id_annonce);
+            } else {
+                console.debug('Prix annonce ', prix_annonce,'€')
+                conserve_annonce(id_annonce, aujourdhui, prix_annonce);
+                affiche_age_annonce(liste_annonces[i], id_annonce)
+            }
         }
 
 
