@@ -14,6 +14,8 @@
 /* globals jQuery, $, waitForKeyElements */
 
 
+//v0.5 modifiée sur pc explore
+
 $(document).ready(function() {
 
     function getMeta(metaName) {
@@ -129,11 +131,38 @@ $(document).ready(function() {
 
         console.debug('getPremiereVisite fin')
         return nombreJours
+    }
+
+    function cache_annonce(id_annonce) {
+        var annonce_existante = GM_getValue(id_annonce)
+        annonce_existante = JSON.parse(annonce_existante)
+        annonce_existante['Cache'] = 'OUI'
+        console.debug(JSON.stringify(annonce_existante, null, 2))
+        GM_setValue(id_annonce, JSON.stringify(annonce_existante, null, 2));
+    }
+
+    function delete_annonce(carte_annonce, id_annonce) {
+        console.debug('delete_annonce debut', id_annonce)
+        var annonce_existante = GM_getValue(id_annonce)
+        annonce_existante = JSON.parse(annonce_existante)
+        if (annonce_existante.Cache == 'OUI') {
+            console.debug('annonce '+id_annonce+', à supprimer')
+            console.debug($(carte_annonce))
+            $(carte_annonce).remove()
+        } else {
+            console.debug('annonce '+id_annonce+', à conserver')
+        }
+        console.debug('delete_annonce fin')
+
 
     }
 
     function affiche_age_annonce(dom_entry, id_annonce) {
         console.debug('affiche_age_annonce debut', dom_entry, id_annonce)
+        if ($('#age'+id_annonce).length) {
+            console.debug('age annonce deja present',id_annonce)
+            return
+        }
         var box = document.createElement( 'div' );
         box.id = 'age'+id_annonce;
         box.className = 'myAlerteAge';
@@ -151,11 +180,56 @@ $(document).ready(function() {
             ' } '
         );
         $( dom_entry).prepend( box );
-
         box.textContent = getPremiereVisite(id_annonce);
-
         console.debug('affiche_age_annonce fin')
+    }
 
+    function affiche_delete_annonce(dom_entry, id_annonce) {
+        console.debug('affiche_delete_annonce debut', id_annonce)
+        if ($('#delete'+id_annonce).length) {
+            console.debug('delete annonce deja present',id_annonce)
+            return
+        }
+        var box = document.createElement( 'div' );
+        box.id = 'delete'+id_annonce;
+        box.className = 'myDelete';
+        GM_addStyle(
+            ' .myDelete {               ' +
+            '    opacity: 0.9;          ' +
+            '    background: white;     ' +
+            '    border: 1px solid red; ' +
+            '    padding: 4px;          ' +
+            '    position: relative;    ' +
+            '    z-index: 15000;        ' +
+            '    float: left;           ' +
+            '    cursor: pointer;       ' +
+            '    left: 250px;           ' +
+            '    top: 6px;              ' +
+            ' } '
+        );
+        $( dom_entry).prepend( box );
+
+        box.textContent = 'X';
+        box.addEventListener( 'click', function () {
+            cache_annonce(id_annonce);
+            $(dom_entry).remove()
+            affiche_icones()
+        }, true );
+
+        console.debug('affiche_delete_annonce fin')
+
+    }
+
+    function affiche_icones() {
+        var liste_annonces = document.getElementsByClassName("styles_adCard__2YFTi styles_classified__aKs-b");
+        console.debug('affiche_icones Nbr d annonces', liste_annonces.length)
+        //http://xpather.com/  AdCard__AdCardLink-sc-1h74x40-0 cHZrAn
+        for (i=0; i<liste_annonces.length; i++) {
+            var id_annonce_lien = document.evaluate('. //a[@class="AdCard__AdCardLink-sc-1h74x40-0 cHZrAn"]/@href', liste_annonces[i], null, XPathResult.STRING_TYPE, null).stringValue;
+            id_annonce = id_annonce_lien.split('/')[2].split('.')[0]
+            affiche_age_annonce(liste_annonces[i], id_annonce)
+            affiche_delete_annonce(liste_annonces[i], id_annonce)
+        }
     }
 
 
@@ -245,9 +319,19 @@ $(document).ready(function() {
             } else {
                 console.debug('Prix annonce ', prix_annonce,'€')
                 conserve_annonce(id_annonce, aujourdhui, prix_annonce);
-                affiche_age_annonce(liste_annonces[i], id_annonce)
+                //affiche_age_annonce(liste_annonces[i], id_annonce)
+                //affiche_delete_annonce(liste_annonces[i], id_annonce)
+                //delete_annonce(liste_annonces[i], id_annonce)
             }
         }
+        console.debug('Nbr d annonces', liste_annonces.length)
+        for (i=0; i<liste_annonces.length; i++) {
+            id_annonce_lien = document.evaluate('. //a[@class="AdCard__AdCardLink-sc-1h74x40-0 cHZrAn"]/@href', liste_annonces[i], null, XPathResult.STRING_TYPE, null).stringValue;
+            id_annonce = id_annonce_lien.split('/')[2].split('.')[0]
+            delete_annonce(liste_annonces[i], id_annonce)
+        }
+        affiche_icones()
+
 
 
     }
