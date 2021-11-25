@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         leboncoin immo
 // @namespace    leboncoin
-// @version      0.4
+// @version      0.6
 // @description  Garde le prix des annonces immo, voir ce que j'ai déjà vu, les évolutions de prix, l'age de l'annonce,...
 // @author       Guillaume Ramelet
 // @match        https://www.leboncoin.fr/recherche?category=9&*
@@ -132,7 +132,7 @@ $(document).ready(function () {
 
         box.innerHTML = "Prix mini <b>"+numberWithSpace(prix_min)+" €</b><br>Prix maxi <b>"+numberWithSpace(prix_max)+" €</b><br>Vu pour la 1ère fois "+texte_visite;
 
-        $( "#myAlertePrix" ).insertBefore( $( ".styles_Gallery__Y7BAy" ) )
+        $( "#myAlertePrix" ).insertBefore( $( ".styles_Gallery__w0olL" ) )
         //$( ".myAlertePrix" ).appendTo("._1cnjm")
         //$( "._1cnjm" ).first().append(box)
         console.debug( $( "#grid" ) )
@@ -288,7 +288,7 @@ $(document).ready(function () {
 
             if (page == 'SearchListing') {
                 var checkExist = setInterval(function() {
-                    var listeCartes =  $("[class='styles_adCard__2YFTi styles_classified__aKs-b']")
+                    var listeCartes =  $("[class='styles_adCard__HQRFN styles_classified__rnsg4']")
                     if (listeCartes.length) {
                         console.log("Les cartes sont apparues!");
                         clearInterval(checkExist);
@@ -321,3 +321,4 @@ $(document).ready(function () {
         }
     },250)
 });
+
