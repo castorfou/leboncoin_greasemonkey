@@ -32,3 +32,6 @@ I use jQuery selector to detect object in the page:
 
 and these selector style declarations are updated regularly by leboncoin. I then have to update those (lines 135 and 291) to continue. IT is surely feasible to have a more generic selector. 
 
+
+
+I should delete nodes which are sponsored cards (styles_advertising) and features cards ( styles_adCard styles_featured )
