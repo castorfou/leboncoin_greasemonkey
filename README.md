@@ -18,7 +18,9 @@ https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/?utm_source=addons.m
 
 
 
-### to be improved
+### v0.7
+
+I have fixed this issue
 
 I use jQuery selector to detect object in the page:
 
@@ -34,4 +36,12 @@ and these selector style declarations are updated regularly by leboncoin. I then
 
 
 
-I should delete nodes which are sponsored cards (styles_advertising) and features cards ( styles_adCard styles_featured )
+I should delete nodes which are features cards ( styles_adCard styles_featured )
+
+
+
+### to improve
+
+
+
+I should delete nodes which are sponsored cards (styles_advertising) 

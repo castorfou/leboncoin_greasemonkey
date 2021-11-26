@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         leboncoin immo
 // @namespace    leboncoin
-// @version      0.6
+// @version      0.7
 // @description  Garde le prix des annonces immo, voir ce que j'ai déjà vu, les évolutions de prix, l'age de l'annonce,...
 // @author       Guillaume Ramelet
 // @match        https://www.leboncoin.fr/recherche?category=9&*
@@ -17,6 +17,7 @@
 
 //v0.5 modifiée sur pc explore
 //v0.6 avec une bonne gestion de la navigation
+//v0.7 noms generiques pour detecter les cartes
 
 $(document).ready(function () {
     console.log('sandbox');
@@ -132,9 +133,7 @@ $(document).ready(function () {
 
         box.innerHTML = "Prix mini <b>"+numberWithSpace(prix_min)+" €</b><br>Prix maxi <b>"+numberWithSpace(prix_max)+" €</b><br>Vu pour la 1ère fois "+texte_visite;
 
-        $( "#myAlertePrix" ).insertBefore( $( ".styles_Gallery__w0olL" ) )
-        //$( ".myAlertePrix" ).appendTo("._1cnjm")
-        //$( "._1cnjm" ).first().append(box)
+        $( "#myAlertePrix" ).insertBefore( $("[class^='styles_Gallery']") )
         console.debug( $( "#grid" ) )
         box.addEventListener( 'click', function () {
             box.parentNode.removeChild( box );
@@ -288,7 +287,7 @@ $(document).ready(function () {
 
             if (page == 'SearchListing') {
                 var checkExist = setInterval(function() {
-                    var listeCartes =  $("[class='styles_adCard__HQRFN styles_classified__rnsg4']")
+                    var listeCartes = $("[class^='styles_adCard']")
                     if (listeCartes.length) {
                         console.log("Les cartes sont apparues!");
                         clearInterval(checkExist);
