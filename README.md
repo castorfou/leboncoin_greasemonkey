@@ -18,6 +18,14 @@ https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/?utm_source=addons.m
 
 
 
+### v0.8
+
+can now remove sponsored cards (pub) 
+
+problem fixed when history.state can be null
+
+
+
 ### v0.7
 
 can now remove featured cards 
@@ -26,8 +34,3 @@ better DOM selection (more generic should adapt to all leboncoin implementation)
 
 
 
-### to improve
-
-
-
-remove sponsored cards

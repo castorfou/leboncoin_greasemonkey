@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         leboncoin immo
 // @namespace    leboncoin
-// @version      0.7
+// @version      0.8
 // @description  Garde le prix des annonces immo, voir ce que j'ai déjà vu, les évolutions de prix, l'age de l'annonce,...
 // @author       Guillaume Ramelet
 // @match        https://www.leboncoin.fr/recherche?category=9&*
@@ -18,6 +18,7 @@
 //v0.5 modifiée sur pc explore
 //v0.6 avec une bonne gestion de la navigation
 //v0.7 noms generiques pour detecter les cartes
+//v0.8 correction bug sur history.state qui peut etre null, suppression des cartes Pub (sponsored)
 
 $(document).ready(function () {
     console.log('sandbox');
@@ -268,56 +269,65 @@ $(document).ready(function () {
 
     var currentState = "";
     setInterval(function(){
-        if (currentState != history.state.url) {
-            currentState = history.state.url;
-            console.log("Do Stuff! with state ", currentState);
-            var page = currentState.split('?')[0].substring(1);
-            console.log(" on est sur la page  ", page);
+        if (history.state != null) {
+		if (currentState != history.state.url) {
+		    currentState = history.state.url;
+		    console.log("Do Stuff! with state ", currentState);
+		    var page = currentState.split('?')[0].substring(1);
+		    console.log(" on est sur la page  ", page);
 
-            if (page == 'ClassifiedAd') {
-                //pour tester les fonctions, en cliquant sur l'annonce Maison 8 pièces 368 m² - 628 000 €
-                //conserve_annonce(1982021932, aujourdhui, 628000, true)
+		    if (page == 'ClassifiedAd') {
+		        //pour tester les fonctions, en cliquant sur l'annonce Maison 8 pièces 368 m² - 628 000 €
+		        //conserve_annonce(1982021932, aujourdhui, 628000, true)
 
-                var og_url = getMeta('og:url');
-                var id_annonce = og_url.split('/')[4].split('.')[0];
-                console.log('annonce id '+id_annonce);
-                affiche_donnees_annonce(id_annonce)
+		        var og_url = getMeta('og:url');
+		        var id_annonce = og_url.split('/')[4].split('.')[0];
+		        console.log('annonce id '+id_annonce);
+		        affiche_donnees_annonce(id_annonce)
 
-            }
+		    }
 
-            if (page == 'SearchListing') {
-                var checkExist = setInterval(function() {
-                    var listeCartes = $("[class^='styles_adCard']")
-                    if (listeCartes.length) {
-                        console.log("Les cartes sont apparues!");
-                        clearInterval(checkExist);
+		    if (page == 'SearchListing') {
+		        var checkExist = setInterval(function() {
+		            var listeCartes = $("[class^='styles_adCard']")
+		            if (listeCartes.length) {
+		                console.log("Les cartes sont apparues!");
+		                clearInterval(checkExist);
 
-                        console.log(" avec le contenu  ", listeCartes);
-                        for (var i=0; i<listeCartes.length; i++) {
-//                            var id_annonce_lien = document.evaluate('. //a[@class="AdCard__AdCardLink-sc-1h74x40-0 XFxsO"]/@href', listeCartes[i], null, XPathResult.STRING_TYPE, null).stringValue;
-                            var id_annonce_lien = document.evaluate('. //a/@href', listeCartes[i], null, XPathResult.STRING_TYPE, null).stringValue;
-                            console.log('id annonce lien',id_annonce_lien)
-                            id_annonce = id_annonce_lien.split('/')[2].split('.')[0]
-                            console.debug('ID annonce: '+id_annonce)
-//                            var prix_annonce_complet = document.evaluate('. //div[contains(@class, "AdCardPrice__Wrapper-bz31y2-0")]', listeCartes[i], null, XPathResult.STRING_TYPE, null).stringValue;
-                            var prix_annonce_complet = document.evaluate('. //span[@data-qa-id="aditem_price"]', listeCartes[i], null, XPathResult.STRING_TYPE, null).stringValue;
-                            console.debug('prix annonce complet: '+prix_annonce_complet)
-                            var prix_annonce = prix_annonce_complet.replace(/(\s*)(€*)/g, '');
-                            if ( prix_annonce === '') {
-                                console.log('Pb dans la recup du prix pour l\'annonce',id_annonce);
-                            } else {
-                                console.debug('Prix annonce ', prix_annonce,'€')
-                                conserve_annonce(id_annonce, aujourdhui, prix_annonce);
-                            }
-                            affiche_age_annonce(listeCartes[i], id_annonce)
-                            affiche_bouton_delete_annonce(listeCartes[i], id_annonce)
-                            cache_annonce(listeCartes[i], id_annonce)
-                        }
-                    }
-                }, 100);
-            }
-            console.log('end sandbox');
-        }
+		                console.log(" avec le contenu  ", listeCartes);
+		                for (var i=0; i<listeCartes.length; i++) {
+	//                            var id_annonce_lien = document.evaluate('. //a[@class="AdCard__AdCardLink-sc-1h74x40-0 XFxsO"]/@href', listeCartes[i], null, XPathResult.STRING_TYPE, null).stringValue;
+		                    var id_annonce_lien = document.evaluate('. //a/@href', listeCartes[i], null, XPathResult.STRING_TYPE, null).stringValue;
+		                    console.log('id annonce lien',id_annonce_lien)
+		                    id_annonce = id_annonce_lien.split('/')[2].split('.')[0]
+		                    console.debug('ID annonce: '+id_annonce)
+	//                            var prix_annonce_complet = document.evaluate('. //div[contains(@class, "AdCardPrice__Wrapper-bz31y2-0")]', listeCartes[i], null, XPathResult.STRING_TYPE, null).stringValue;
+		                    var prix_annonce_complet = document.evaluate('. //span[@data-qa-id="aditem_price"]', listeCartes[i], null, XPathResult.STRING_TYPE, null).stringValue;
+		                    console.debug('prix annonce complet: '+prix_annonce_complet)
+		                    var prix_annonce = prix_annonce_complet.replace(/(\s*)(€*)/g, '');
+		                    if ( prix_annonce === '') {
+		                        console.log('Pb dans la recup du prix pour l\'annonce',id_annonce);
+		                    } else {
+		                        console.debug('Prix annonce ', prix_annonce,'€')
+		                        conserve_annonce(id_annonce, aujourdhui, prix_annonce);
+		                    }
+		                    affiche_age_annonce(listeCartes[i], id_annonce)
+		                    affiche_bouton_delete_annonce(listeCartes[i], id_annonce)
+		                    cache_annonce(listeCartes[i], id_annonce)
+		                }
+		            }
+		            var listeSponsored = $("[class^='styles_advertising']")
+		            if (listeSponsored.length) {
+		                console.log(" avec le contenu pub ", listeSponsored);
+		                for (var j=0; j<listeSponsored.length; j++) {
+		                	$(listeSponsored[j]).remove()
+		                }
+		            }
+		        }, 100);
+		    }
+		    console.log('end sandbox');
+		}
+    	}
     },250)
 });
 
