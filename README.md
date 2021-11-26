@@ -20,23 +20,9 @@ https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/?utm_source=addons.m
 
 ### v0.7
 
-I have fixed this issue
+can now remove featured cards 
 
-I use jQuery selector to detect object in the page:
-
-* ```javascript
-  var listeCartes =  $("[class='styles_adCard__2YFTi styles_classified__aKs-b']")
-  ```
-
-* ```javascript
-  $( "#myAlertePrix" ).insertBefore( $( ".styles_Gallery__Y7BAy" ) )
-  ```
-
-and these selector style declarations are updated regularly by leboncoin. I then have to update those (lines 135 and 291) to continue. IT is surely feasible to have a more generic selector. 
-
-
-
-I should delete nodes which are features cards ( styles_adCard styles_featured )
+better DOM selection (more generic should adapt to all leboncoin implementation)
 
 
 
@@ -44,4 +30,4 @@ I should delete nodes which are features cards ( styles_adCard styles_featured )
 
 
 
-I should delete nodes which are sponsored cards (styles_advertising) 
+remove sponsored cards
