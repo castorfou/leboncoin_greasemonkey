@@ -18,6 +18,12 @@ https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/?utm_source=addons.m
 
 
 
+### v0.9
+
+remove new type of sponsored cards
+
+
+
 ### v0.8
 
 can now remove sponsored cards (pub) 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         leboncoin immo
 // @namespace    leboncoin
-// @version      0.8
+// @version      0.9
 // @description  Garde le prix des annonces immo, voir ce que j'ai déjà vu, les évolutions de prix, l'age de l'annonce,...
 // @author       Guillaume Ramelet
 // @match        https://www.leboncoin.fr/recherche?category=9&*
@@ -316,11 +316,18 @@ $(document).ready(function () {
 		                    cache_annonce(listeCartes[i], id_annonce)
 		                }
 		            }
-		            var listeSponsored = $("[class^='styles_advertising']")
+		            var listeSponsored = $("[class^='styles_ad_']")
 		            if (listeSponsored.length) {
 		                console.log(" avec le contenu pub ", listeSponsored);
 		                for (var j=0; j<listeSponsored.length; j++) {
 		                	$(listeSponsored[j]).remove()
+		                }
+		            }
+		            listeSponsored = $("[class^='styles_advertising']")
+		            if (listeSponsored.length) {
+		                console.log(" avec le contenu pub ", listeSponsored);
+		                for (var jk=0; jk<listeSponsored.length; jk++) {
+		                	$(listeSponsored[jk]).remove()
 		                }
 		            }
 		        }, 100);
@@ -330,4 +337,3 @@ $(document).ready(function () {
     	}
     },250)
 });
-
